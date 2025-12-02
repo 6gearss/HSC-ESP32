@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSC Device Status</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <h1>HSC Device Configuration</h1>
+        <span id="headerLocation" class="header-location"></span>
+    </header>
+
+    <main>
+
+        <div class="card">
+            <h2>Configuration</h2>
+            <form id="configForm">
+                <h3>WiFi Settings</h3>
+                <div class="form-group">
+                    <label for="wifi_ssid">SSID:</label>
+                    <input type="text" id="wifi_ssid" name="wifi_ssid" required>
+                </div>
+                <div class="form-group">
+                    <label for="wifi_password">Password:</label>
+                    <input type="password" id="wifi_password" name="wifi_password">
+                </div>
+
+                <h3>MQTT Settings</h3>
+                <div class="form-group">
+                    <label for="mqtt_server">Server:</label>
+                    <input type="text" id="mqtt_server" name="mqtt_server" required>
+                </div>
+                <div class="form-group">
+                    <label for="mqtt_port">Port:</label>
+                    <input type="number" id="mqtt_port" name="mqtt_port" required>
+                </div>
+                <div class="form-group">
+                    <label for="mqtt_user">User:</label>
+                    <input type="text" id="mqtt_user" name="mqtt_user">
+                </div>
+                <div class="form-group">
+                    <label for="mqtt_password">Password:</label>
+                    <input type="password" id="mqtt_password" name="mqtt_password">
+                </div>
+
+                <h3>Device Settings</h3>
+                <div class="form-group">
+                    <label for="board_id">Board ID:</label>
+                    <input type="number" id="board_id" name="board_id" required>
+                </div>
+
+                <h3>Location Settings</h3>
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" name="location">
+                </div>
+
+                <div class="actions">
+                    <button type="button" id="restartBtn" class="btn-link">Restart</button>
+                    <button type="button" id="locateLink" class="btn-link">Locate Board</button>
+                    <button type="submit" class="btn-link">Save Settings</button>
+                    <button type="button" id="resetBtn" class="btn-link">Reset Defaults</button>
+                </div>
+
+
+            </form>
+        </div>
+
+        <script>
+            // Track locate runtime state
+            let locateState = false;
+
+            // Load settings on page load
+            fetch('/api/settings')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('wifi_ssid').value = data.wifi_ssid || '';
+                    document.getElementById('wifi_password').value = data.wifi_password || '';
+                    document.getElementById('mqtt_server').value = data.mqtt_server || '';
+                    document.getElementById('mqtt_port').value = data.mqtt_port || 1883;
+                    document.getElementById('mqtt_user').value = data.mqtt_user || '';
+                    document.getElementById('mqtt_password').value = data.mqtt_password || '';
+                    document.getElementById('board_id').value = (data.board_id !== undefined) ? data.board_id : 1;
+
+                    document.getElementById('location').value = data.location || '';
+                    document.getElementById('headerLocation').textContent = data.location || '';
+
+                    // Initialize locate link text based on backend state (if provided)
+                    locateState = false;
+                    document.getElementById('locateLink').textContent = 'Locate Board';
+                })
+                .catch(err => console.error('Failed to load settings:', err));
+
+            // Handle Save
+            document.getElementById('configForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const data = {};
+                formData.forEach((value, key) => {
+                    if (key === 'mqtt_port' || key === 'board_id') {
+                        data[key] = parseInt(value);
+                    } else {
+                        // no 'locate' field anymore
+                        data[key] = value;
+                    }
+                });
+
+                fetch('/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        if (data.status === 'success') location.reload();
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        alert('Failed to save settings');
+                    });
+            });
+
+            // Handle Restart
+            document.getElementById('restartBtn').addEventListener('click', function () {
+                if (confirm('Are you sure you want to restart the device?')) {
+                    fetch('/api/restart', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert(data.message);
+                            setTimeout(() => location.reload(), 5000);
+                        })
+                        .catch(err => alert('Failed to restart'));
+                }
+            });
+
+            // Handle Reset
+            document.getElementById('resetBtn').addEventListener('click', function () {
+                if (confirm('Are you sure you want to reset all settings to defaults? This will reboot the device.')) {
+                    fetch('/api/reset', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert(data.message);
+                            location.reload();
+                        })
+                        .catch(err => alert('Failed to reset settings'));
+                }
+            });
+
+            // Handle Locate as a link
+            document.getElementById('locateLink').addEventListener('click', function () {
+                locateState = !locateState;
+
+                fetch('/api/locate?state=' + locateState, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Update link text to show current state
+                            document.getElementById('locateLink').textContent =
+                                locateState ? 'Stop Locate' : 'Locate Board';
+                        } else {
+                            console.error('Failed to toggle locate');
+                            locateState = !locateState; // revert on failure
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error toggling locate:', err);
+                        locateState = !locateState; // revert on error
+                    });
+            });
+        </script>
+
+    </main>
+
+    <footer>
+        <div class="footer-grid">
+            <!-- Row 1: Network & Connection Info -->
+            <div class="footer-row">
+                <div class="footer-pair">
+                    <span class="label">Host:</span>
+                    <span class="value">%HOSTNAME%</span>
+                </div>
+
+                <div class="footer-pair">
+                    <span class="label">IP:</span>
+                    <span class="value">%IP%</span>
+                </div>
+
+                <div class="footer-pair">
+                    <span class="label">SSID:</span>
+                    <span class="value">%SSID%</span>
+                </div>
+
+                <div class="footer-pair">
+                    <span class="label">Signal:</span>
+                    <span class="value" id="rssi">%RSSI%</span>
+                </div>
+
+                <div class="footer-pair">
+                    <span class="label">MQTT:</span>
+                    <span class="value">%MQTT_STATUS%</span>
+                </div>
+
+                <!-- CAN -->
+                <div class="footer-pair">
+                    <span class="label">CAN ID:</span>
+                    <span class="value">%CAN_ID%</span>
+                </div>
+                <div class="footer-pair">
+                    <span class="label">CAN:</span>
+                    <span class="value">%CAN_STATUS%</span>
+                </div>
+            </div>
+
+            <!-- Row 2: System Info -->
+            <div class="footer-row">
+                <div class="footer-pair">
+                    <span class="label">FW:</span>
+                    <span class="value">%FW_REV%</span>
+                </div>
+
+                <div class="footer-pair">
+                    <span class="label">Date/Time:</span>
+                    <span class="value" id="runtime">%DATETIME%</span>
+                </div>
+
+                <div class="footer-pair">
+                    <span class="label">Uptime:</span>
+                    <span class="value" id="uptime">%UPTIME%</span>
+                </div>
+
+                <div class="footer-pair">
+                    <span class="label">Free Mem:</span>
+                    <span class="value" id="freemem">%FREE_MEMORY%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="copyright">
+            HSC Engineering &copy;2025
+        </div>
+    </footer>
+
+
+
+    <script>
+        // Auto-refresh dynamic footer values every 2 seconds
+        setInterval(() => {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.uptime) document.getElementById('uptime').textContent = data.uptime;
+                    if (data.rssi) document.getElementById('rssi').textContent = data.rssi;
+                    if (data.free_memory) document.getElementById('freemem').textContent = data.free_memory;
+                    if (data.runtime) document.getElementById('runtime').textContent = data.runtime;
+                })
+                .catch(err => console.error('Failed to refresh status:', err));
+        }, 2000);
+    </script>
+</body>
+
+</html>

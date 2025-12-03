@@ -27,10 +27,10 @@ A reusable PlatformIO library for ESP32-based devices on the HSC train layout. T
 2. **Add HSC_Base library**:
    ```bash
    # Option 1: Git submodule (recommended)
-   git submodule add https://github.com/YOUR_USERNAME/HSC-ESP32-Base.git lib/HSC_Base
+   git submodule add https://github.com/6gearss/HSC-ESP32.git lib/HSC_Base
    
    # Option 2: Copy the library
-   cp -r /path/to/HSC-ESP32-Base/lib/HSC_Base lib/
+   cp -r /path/to/HSC-ESP32/lib/HSC_Base lib/
    ```
 
 3. **Create `src/main.cpp`**:

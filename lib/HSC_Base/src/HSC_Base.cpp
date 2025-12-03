@@ -401,7 +401,15 @@ footer .value {
 }
 )rawliteral";
 
-HSC_Base::HSC_Base() : server(80), mqttClient(espClient) {}
+HSC_Base::HSC_Base() : server(80), mqttClient(espClient) {
+  boardTypeDesc = BOARD_TYPE_DESC;
+  boardTypeShort = BOARD_TYPE_SHORT;
+}
+
+void HSC_Base::setBoardInfo(const char *desc, const char *shortName) {
+  boardTypeDesc = desc;
+  boardTypeShort = shortName;
+}
 
 void HSC_Base::begin() {
   Serial.begin(115200);
@@ -539,8 +547,7 @@ void HSC_Base::reconnectMqtt() {
     Serial.println("connected");
 
     String topic = "hsc/device/announce";
-    String deviceName =
-        String(BOARD_TYPE_SHORT) + "-" + String(currentConfig.board_id);
+    String deviceName = boardTypeShort + "-" + String(currentConfig.board_id);
 
     uint8_t mac[6];
     WiFi.macAddress(mac);
@@ -633,10 +640,10 @@ String HSC_Base::processor(const String &var) {
     return String(currentConfig.board_id);
   }
   if (var == "BOARD_TYPE") {
-    return BOARD_TYPE_DESC;
+    return boardTypeDesc;
   }
   if (var == "BOARD_TYPE_SHORT") {
-    return BOARD_TYPE_SHORT;
+    return boardTypeShort;
   }
   return String();
 }

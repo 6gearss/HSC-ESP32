@@ -19,6 +19,9 @@ public:
   void begin();
   void loop();
 
+  // Set Board Info
+  void setBoardInfo(const char *desc, const char *shortName);
+
   // Register a custom page handler
   void registerPage(const char *uri, ArRequestHandlerFunction handler);
 
@@ -44,6 +47,8 @@ private:
   bool shouldReboot = false;
   bool locateActive = false;
   unsigned long lastMqttReconnectAttempt = 0;
+  String boardTypeDesc;
+  String boardTypeShort;
 
   void setupWifi();
   void reconnectMqtt();

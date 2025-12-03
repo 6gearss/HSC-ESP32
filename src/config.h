@@ -7,9 +7,9 @@
 #undef BOARD_TYPE_SHORT
 
 static const char BOARD_TYPE_DESC[] =
-    "HSC Base Device"; // Full description for web UI
+    "HSC NEW Device"; // Full description for web UI
 static const char BOARD_TYPE_SHORT[] =
-    "BASE"; // Short name for MQTT (e.g., "BASE-1", "YARD-2", "SIGNAL-3")
+    "NEW"; // Short name for MQTT (e.g., "BASE-1", "YARD-2", "SIGNAL-3")
 
 // You can also override other defaults from lib/HSC_Base/src/config.h here
 // For example:

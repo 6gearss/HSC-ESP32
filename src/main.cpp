@@ -12,6 +12,7 @@ void setup() {
   }
 
   // Initialize the HSC_Base library
+  hscBase.setBoardInfo(BOARD_TYPE_DESC, BOARD_TYPE_SHORT);
   hscBase.begin();
 
   // Register device-specific page (optional)

@@ -551,7 +551,7 @@ void HSC_Base::reconnectMqtt() {
                          currentConfig.mqtt_password.c_str())) {
     Serial.println("connected");
 
-    String topic = "hsc/device/announce";
+    String topic = "HSC/device/announce";
     String deviceName = boardTypeShort + "-" + String(currentConfig.board_id);
 
     uint8_t mac[6];

@@ -563,7 +563,7 @@ void HSC_Base::reconnectMqtt() {
     String payload = deviceName + "," + String(hostname) + "," + ipAddress;
     mqttClient.publish(topic.c_str(), payload.c_str(), true);
 
-    String statusTopic = "hsc/device/status/" + String(currentConfig.board_id);
+    String statusTopic = "HSC/device/status/" + String(currentConfig.board_id);
     mqttClient.publish(statusTopic.c_str(), "online");
   } else {
     Serial.print("failed, rc=");

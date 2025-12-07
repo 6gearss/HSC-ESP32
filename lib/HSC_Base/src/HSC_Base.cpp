@@ -14,7 +14,7 @@ static const char index_html[] PROGMEM = R"rawliteral(
 </head>
 <body>
     <header>
-        <h1>HSC Device Configuration</h1>
+        <h1>HSC Base Configuration</h1>
         <span id="headerLocation" class="header-location"></span>
     </header>
     <main>

@@ -461,8 +461,10 @@ void HSC_Base::begin() {
   macStr = String(macBuf);
 
   char devIdBuf[32];
-  sprintf(devIdBuf, "esp32-%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2],
-          mac[3], mac[4], mac[5]);
+  String shortName = String(boardTypeShort);
+  shortName.toLowerCase();
+  sprintf(devIdBuf, "%s-%02x%02x%02x", shortName.c_str(), mac[3], mac[4],
+          mac[5]);
   deviceId = String(devIdBuf);
 
   // Approximate boot time (will be refined when NTP syncs)
@@ -544,6 +546,19 @@ void HSC_Base::setupWifi() {
   Serial.println(currentConfig.wifi_ssid);
 
   WiFi.mode(WIFI_STA);
+
+  // Set Hostname
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  char hostname[32];
+  String shortName = String(boardTypeShort);
+  shortName.toLowerCase();
+  sprintf(hostname, "%s-%02x%02x%02x", shortName.c_str(), mac[3], mac[4],
+          mac[5]);
+  WiFi.setHostname(hostname);
+  Serial.print("Hostname: ");
+  Serial.println(hostname);
+
   WiFi.begin(currentConfig.wifi_ssid.c_str(),
              currentConfig.wifi_password.c_str());
 
@@ -599,7 +614,7 @@ void HSC_Base::reconnectMqtt() {
     time_t actualBootTime = now - (millis() / 1000);
 
     StaticJsonDocument<512> doc;
-    doc["device_id"] = deviceId;
+    doc["hostname"] = deviceId;
     doc["model"] = boardTypeDesc;
     doc["board_code"] = boardTypeShort;
     doc["firmware"] = firmwareVersion;
@@ -616,7 +631,7 @@ void HSC_Base::reconnectMqtt() {
     // We send this every time we reconnect, which acts as a "device allows" or
     // "hello" message
     StaticJsonDocument<128> bootDoc;
-    bootDoc["device_id"] = deviceId;
+    bootDoc["hostname"] = deviceId;
     bootDoc["event"] = "boot"; // or 'reconnect' if we wanted to be specific
     char bootBuf[128];
     serializeJson(bootDoc, bootBuf);
@@ -645,8 +660,11 @@ String HSC_Base::processor(const String &var) {
   if (var == "HOSTNAME") {
     uint8_t mac[6];
     WiFi.macAddress(mac);
-    char hostname[20];
-    sprintf(hostname, "esp32-%02X%02X%02X", mac[3], mac[4], mac[5]);
+    char hostname[32];
+    String shortName = String(boardTypeShort);
+    shortName.toLowerCase();
+    sprintf(hostname, "%s-%02x%02x%02x", shortName.c_str(), mac[3], mac[4],
+            mac[5]);
     return String(hostname);
   }
   if (var == "SSID") {

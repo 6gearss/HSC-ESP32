@@ -50,7 +50,7 @@ fi
 
 # Define destination filenames
 FW_NAME="firmware_${BOARD_NAME}.bin"
-FS_NAME="firmware_${BOARD_NAME}_spiffs.bin"
+FS_NAME="firmware_${BOARD_NAME}.spiffs.bin"
 
 # Copy files
 if [ -f "$BUILD_DIR/firmware.bin" ]; then
